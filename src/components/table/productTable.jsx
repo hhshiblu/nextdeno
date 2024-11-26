@@ -11,9 +11,11 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Trash2, Eye } from "lucide-react";
+import { Trash2, Eye, HandPlatter } from "lucide-react";
 import { format } from "date-fns";
 import Link from "next/link";
+import { DeleteProduct, DeleteProducts, updateStatus } from "@/action/product";
+import { useToast } from "@/hooks/use-toast";
 
 // const products = [
 //   {
@@ -79,26 +81,41 @@ import Link from "next/link";
 // ];
 
 export default function ProductsTable({ products }) {
-  console.log(products);
+  const { toast } = useToast();
 
-  const [productList, setProductList] = useState(products);
   const [selectedProducts, setSelectedProducts] = useState([]);
 
-  const handleDelete = (id) => {
-    setProductList(productList.filter((product) => product.id !== id));
-    setSelectedProducts(
-      selectedProducts.filter((productId) => productId !== id)
-    );
+  const handleDelete = async (id) => {
+    const result = await DeleteProduct(id);
+    if (result.success) {
+      toast({
+        title: "Success",
+        description: result.message,
+      });
+    }
   };
-
-  const handleReview = (id) => {
-    // Implement review functionality
-    console.log(`Reviewing product with id: ${id}`);
+  const deletemultiple = async () => {
+    const result = await DeleteProducts(selectedProducts);
+    if (result.success) {
+      toast({
+        title: "Success",
+        description: result.message,
+      });
+    }
+  };
+  const handelStatus = async (id) => {
+    const result = await updateStatus(id);
+    if (result.success) {
+      toast({
+        title: "Success",
+        description: result.message,
+      });
+    }
   };
 
   const handleSelectAll = (checked) => {
     if (checked) {
-      setSelectedProducts(productList.map((product) => product.id));
+      setSelectedProducts(products.map((product) => product.id));
     } else {
       setSelectedProducts([]);
     }
@@ -118,16 +135,40 @@ export default function ProductsTable({ products }) {
 
   return (
     <div>
-      <div className="mb-4">
+      {/* <div className="mb-4">
         <Checkbox
-          checked={selectedProducts.length === productList.length}
+          checked={selectedProducts.length === products.length}
           onCheckedChange={handleSelectAll}
           id="select-all"
         />
         <label htmlFor="select-all" className="ml-2">
           Select All
         </label>
+      </div> */}
+      <div className="flex justify-between">
+        <div className="mb-4">
+          <Checkbox
+            checked={selectedProducts.length === products.length}
+            onCheckedChange={handleSelectAll}
+            id="select-all"
+          />
+          <label htmlFor="select-all" className="ml-2">
+            Select All
+          </label>
+        </div>
+        {selectedProducts.length > 0 && (
+          <div className="">
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => deletemultiple()}
+            >
+              <Trash2 className="w-4 h-4 mr-1" /> Delete
+            </Button>
+          </div>
+        )}
       </div>
+
       <Table>
         <TableHeader>
           <TableRow>
@@ -140,12 +181,12 @@ export default function ProductsTable({ products }) {
             <TableHead>Status</TableHead>
             <TableHead>Sold Quantity</TableHead>
             <TableHead>Created At</TableHead>
-            <TableHead>Updated At</TableHead>
+
             <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {productList.map((product) => (
+          {products.map((product) => (
             <TableRow key={product.id}>
               <TableCell>
                 <Checkbox
@@ -155,17 +196,14 @@ export default function ProductsTable({ products }) {
                   }
                 />
               </TableCell>
-              <TableCell>{product.product_name}</TableCell>
+              <TableCell>{product.productName}</TableCell>
               <TableCell>{product.category}</TableCell>
-              <TableCell>${product.price}</TableCell>
-              {/* <TableCell>
-                {product.oldPrice ? `$${product.oldPrice.toFixed(2)}` : "-"}
-              </TableCell> */}
+              <TableCell>{product.price}</TableCell>
+              <TableCell>{product.oldPrice}</TableCell>
               <TableCell>{product.stock}</TableCell>
-              <TableCell>{product.soldOut ? "Sold Out" : "In Stock"}</TableCell>
+              <TableCell>{product.active ? "True" : "False"}</TableCell>
               <TableCell>{product.soldQuantity}</TableCell>
               <TableCell>{formatDate(product.created_at)}</TableCell>
-              {/* <TableCell>{formatDate(product.updatedAt)}</TableCell> */}
               <TableCell>
                 <div className="flex space-x-2">
                   <Button variant="outline" size="sm">
@@ -175,6 +213,13 @@ export default function ProductsTable({ products }) {
                     >
                       <Eye className="w-4 h-4 mr-1" /> Preview
                     </Link>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handelStatus(product.id)}
+                  >
+                    <HandPlatter className="w-4 h-4 mr-1" /> Update status
                   </Button>
                   <Button
                     variant="destructive"

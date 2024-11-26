@@ -21,6 +21,8 @@ const ReactQuill = dynamic(() => import("react-quill"), { ssr: false });
 import "react-quill/dist/quill.snow.css";
 
 import { createProduct } from "@/action/product";
+import { useToast } from "@/hooks/use-toast";
+import { useRouter } from "next/navigation";
 
 const DynamicFieldInput = ({ label, items, setItems, placeholder }) => {
   const [newItem, setNewItem] = useState("");
@@ -75,6 +77,8 @@ const DynamicFieldInput = ({ label, items, setItems, placeholder }) => {
 };
 
 export default function ProductUploadForm() {
+  const router = useRouter();
+  const { toast } = useToast();
   const [images, setImages] = useState([]);
   const [showAdditionalInfo, setShowAdditionalInfo] = useState(false);
   const [additionalFields, setAdditionalFields] = useState({
@@ -120,7 +124,22 @@ export default function ProductUploadForm() {
     }
 
     const productData = JSON.parse(JSON.stringify(filledFields));
-    const d = await createProduct(productData);
+    console.log(productData);
+
+    const result = await createProduct(productData);
+    if (result.error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: result.error,
+      });
+    } else if (result.success) {
+      toast({
+        title: "Success",
+        description: result.message,
+      });
+      router.push("/admin-dashboard/all-products");
+    }
   };
 
   const { getRootProps, getInputProps } = useDropzone({
@@ -319,6 +338,28 @@ export default function ProductUploadForm() {
             {errors.price && (
               <p className="text-red-500 mt-1">{errors.price.message}</p>
             )}
+          </div>
+          <div>
+            <Label htmlFor="oldPrice"> Old Price</Label>
+            <Controller
+              name="oldPrice"
+              control={control}
+              // rules={{
+              //   required: "Price is required",
+              //   min: { value: 0, message: "Price must be positive" },
+              // }}
+              render={({ field }) => (
+                <Input
+                  id="oldPrice"
+                  type="number"
+                  placeholder="Enter old Price"
+                  {...field}
+                />
+              )}
+            />
+            {/* {errors.price && (
+              <p className="text-red-500 mt-1">{errors.price.message}</p>
+            )} */}
           </div>
           <div>
             <Label htmlFor="sku">SKU</Label>

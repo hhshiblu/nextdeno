@@ -1,37 +1,35 @@
 "use server";
 
-import UserData from "@/components/database/user";
+import SellerData from "@/components/database/seller";
 import { generateId } from "@/components/generateId/id";
 import slugify from "slugify";
 import bcrypt from "bcrypt";
 import { revalidatePath } from "next/cache";
-const db = new UserData();
-//create user
-export const createUser = async (formData) => {
+const db = new SellerData();
+
+export const createSeller = async (formData) => {
   try {
     formData.id = generateId(14);
     formData.slug = slugify(formData.name);
     const pass = await bcrypt.hash(formData.password, 10);
     formData.password = pass;
-
-    const result = await db.createUser(formData);
+    const result = await db.createSeller(formData);
+    console.log(result);
 
     if (result.affectedRows == 1) {
       revalidatePath("/admin-dashboard/create-user");
       return { message: "user created successfully", success: true };
     }
   } catch (error) {
-    return {
-      error: error.message,
-    };
+    return error.message;
   }
 };
-//get all
-export const getUsers = async () => {
+
+export const getSellers = async () => {
   try {
-    const result = await db.getAllUsers();
-    const users = JSON.parse(JSON.stringify(result));
-    return users;
+    const result = await db.getAllSellers();
+    const sellers = JSON.parse(JSON.stringify(result));
+    return sellers;
   } catch (error) {
     return {
       error: error.message,
@@ -39,9 +37,9 @@ export const getUsers = async () => {
   }
 };
 // filter by month and count of user
-export const getUsersGrowth = async () => {
+export const getSellersGrowth = async () => {
   try {
-    const result = await db.getMonthlyUserGrowth();
+    const result = await db.getMonthlySellerGrowth();
     const users = JSON.parse(JSON.stringify(result));
     return users;
   } catch (error) {
@@ -51,9 +49,9 @@ export const getUsersGrowth = async () => {
   }
 };
 //get user by id
-export const getUserById = async (id) => {
+export const getSeller = async (id) => {
   try {
-    const result = await db.getUserById(id);
+    const result = await db.getSellerById(id);
     const users = JSON.parse(JSON.stringify(result));
     return users;
   } catch (error) {
@@ -65,7 +63,7 @@ export const getUserById = async (id) => {
 //update status
 export const updateStatus = async (id) => {
   try {
-    const result = await db.toggleUserStatus(id);
+    const result = await db.toggleSellerStatus(id);
 
     if (result) {
       revalidatePath("/admin-dashboard/all-users");
@@ -78,9 +76,9 @@ export const updateStatus = async (id) => {
   }
 };
 //delete multiple users
-export const deleteusers = async (idArray) => {
+export const deleteSellers = async (idArray) => {
   try {
-    const result = await db.deleteUsersByIds(idArray);
+    const result = await db.deleteSellersByIds(idArray);
     if (result) {
       revalidatePath("/admin-dashboard/all-users");
       return { success: true, message: "User status update successfully" };
@@ -92,9 +90,9 @@ export const deleteusers = async (idArray) => {
   }
 };
 //delete single user
-export const deleteuser = async (id) => {
+export const deleteSeller = async (id) => {
   try {
-    const result = await db.deleteUserById(id);
+    const result = await db.deleteSellerById(id);
 
     if (result) {
       revalidatePath("/admin-dashboard/all-users");

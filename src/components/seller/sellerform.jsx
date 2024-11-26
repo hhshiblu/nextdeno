@@ -1,3 +1,4 @@
+"use client";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,27 +9,19 @@ import {
   CardTitle,
   CardDescription,
   CardContent,
-  CardFooter,
 } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { createSeller } from "@/action/seller";
+import { useToast } from "@/hooks/use-toast";
 
 export default function SellerSignup() {
+  const { toast } = useToast();
   const [formData, setFormData] = useState({
     name: "",
     shopName: "",
     password: "",
     phoneNumber: "",
     email: "",
-    division: "",
-    zilla: "",
-    upazilla: "",
-    streetAddress: "",
+    description: "",
     category: "",
   });
 
@@ -42,14 +35,7 @@ export default function SellerSignup() {
     }));
   };
 
-  const handleSelectChange = (name, value) => {
-    setFormData((prevData) => ({
-      ...prevData,
-      [name]: value,
-    }));
-  };
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const newErrors = {};
 
@@ -64,8 +50,29 @@ export default function SellerSignup() {
     setErrors(newErrors);
 
     if (Object.keys(newErrors).length === 0) {
-      // Here you would typically send the data to your backend
-      console.log("Form submitted:", formData);
+      const result = await createSeller(formData);
+      if (result.error) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: result.error,
+        });
+      } else if (result.success) {
+        toast({
+          title: "Success",
+          description: result.message,
+        });
+
+        setFormData({
+          name: "",
+          shopName: "",
+          password: "",
+          phoneNumber: "",
+          email: "",
+          description: "",
+          category: "",
+        });
+      }
     }
   };
 
@@ -150,85 +157,30 @@ export default function SellerSignup() {
               <p className="text-sm text-red-500">{errors.email}</p>
             )}
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="division">Division</Label>
-              <Select
-                name="division"
-                onValueChange={(value) => handleSelectChange("division", value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select division" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="dhaka">Dhaka</SelectItem>
-                  <SelectItem value="chittagong">Chittagong</SelectItem>
-                  <SelectItem value="rajshahi">Rajshahi</SelectItem>
-                  {/* Add more divisions as needed */}
-                </SelectContent>
-              </Select>
-              {errors.division && (
-                <p className="text-sm text-red-500">{errors.division}</p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="zilla">Zilla</Label>
-              <Input
-                id="zilla"
-                name="zilla"
-                value={formData.zilla}
-                onChange={handleChange}
-                placeholder="Enter zilla"
-              />
-              {errors.zilla && (
-                <p className="text-sm text-red-500">{errors.zilla}</p>
-              )}
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="upazilla">Upazilla</Label>
-              <Input
-                id="upazilla"
-                name="upazilla"
-                value={formData.upazilla}
-                onChange={handleChange}
-                placeholder="Enter upazilla"
-              />
-              {errors.upazilla && (
-                <p className="text-sm text-red-500">{errors.upazilla}</p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="streetAddress">Street Address</Label>
-              <Input
-                id="streetAddress"
-                name="streetAddress"
-                value={formData.streetAddress}
-                onChange={handleChange}
-                placeholder="Enter street address"
-              />
-              {errors.streetAddress && (
-                <p className="text-sm text-red-500">{errors.streetAddress}</p>
-              )}
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="description">Shop Description</Label>
+            <Input
+              id="description"
+              name="description"
+              type="text"
+              value={formData.description}
+              onChange={handleChange}
+              placeholder="Enter shop description"
+            />
+            {errors.description && (
+              <p className="text-sm text-red-500">{errors.description}</p>
+            )}
           </div>
           <div className="space-y-2">
-            <Label htmlFor="category">Category to Sell</Label>
-            <Select
+            <Label htmlFor="description"> Which Category Product</Label>
+            <Input
+              id="category"
               name="category"
-              onValueChange={(value) => handleSelectChange("category", value)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select category" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="electronics">Electronics</SelectItem>
-                <SelectItem value="clothing">Clothing</SelectItem>
-                <SelectItem value="food">Food</SelectItem>
-                {/* Add more categories as needed */}
-              </SelectContent>
-            </Select>
+              type="text"
+              value={formData.category}
+              onChange={handleChange}
+              placeholder="Enter category name"
+            />
             {errors.category && (
               <p className="text-sm text-red-500">{errors.category}</p>
             )}

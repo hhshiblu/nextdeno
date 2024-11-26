@@ -1,3 +1,4 @@
+"use client";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,13 +11,15 @@ import {
   CardContent,
   CardFooter,
 } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
+import { createUser } from "@/action/user";
 
 export default function UserSignup() {
+  const { toast } = useToast();
   const [formData, setFormData] = useState({
     name: "",
     phoneNumber: "",
     password: "",
-    confirmPassword: "",
   });
 
   const [errors, setErrors] = useState({});
@@ -29,7 +32,7 @@ export default function UserSignup() {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const newErrors = {};
 
@@ -37,14 +40,27 @@ export default function UserSignup() {
     if (!formData.phoneNumber)
       newErrors.phoneNumber = "Phone number is required";
     if (!formData.password) newErrors.password = "Password is required";
-    if (formData.password !== formData.confirmPassword)
-      newErrors.confirmPassword = "Passwords do not match";
 
     setErrors(newErrors);
 
     if (Object.keys(newErrors).length === 0) {
       // Here you would typically send the data to your backend
-      console.log("Form submitted:", formData);
+      const result = await createUser(formData);
+
+      if (result.error) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: result.error,
+        });
+      } else if (result.success) {
+        toast({
+          title: "Success",
+          description: result.message,
+        });
+       
+        setFormData({ name: "", phoneNumber: "", password: "" });
+      }
     }
   };
 
@@ -96,20 +112,7 @@ export default function UserSignup() {
               <p className="text-sm text-red-500">{errors.password}</p>
             )}
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="confirmPassword">Confirm Password</Label>
-            <Input
-              id="confirmPassword"
-              name="confirmPassword"
-              type="password"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              placeholder="Confirm your password"
-            />
-            {errors.confirmPassword && (
-              <p className="text-sm text-red-500">{errors.confirmPassword}</p>
-            )}
-          </div>
+
           <Button type="submit" className="w-full">
             Sign Up
           </Button>

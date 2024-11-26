@@ -1,7 +1,4 @@
 const { createPool } = require("mysql2/promise");
-// const dotenv = require("dotenv");
-
-// dotenv.config();
 let pool = null;
 
 const dbConfig = {
@@ -22,11 +19,5 @@ const connectToDatabase = async () => {
     throw new Error(`connecting to MySQL: ${error}`);
   }
 };
-
-// const releaseConnection = async () => {
-//   if (pool) {
-//     // pool.end();
-//   }
-// };
 
 module.exports = { connectToDatabase };
